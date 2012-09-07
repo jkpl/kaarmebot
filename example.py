@@ -4,7 +4,9 @@ import json
 
 if __name__ == '__main__':
     conf = {
-        'channels': ["#somechannel", "#someotherchannel"],
+        'channels': {
+            'irc.server.net': ["#somechannel", "#someotherchannel"]
+        },
         'servers': [
             ('irc.server.net', 6667, 'secretpassword')
         ],

@@ -7,7 +7,7 @@ import types
 class BotCore(SingleServerIRCBot):
     def __init__(self, channels, servers, nickname, real_name, msgcallback):
         SingleServerIRCBot.__init__(self, servers, nickname, real_name)
-        self.channelset = set(channels)
+        self.channeld = channels
         self.msgcallback = msgcallback
         self.connection.add_global_handler("all_events",
                                            self._message_dispatch, -10)
@@ -16,8 +16,10 @@ class BotCore(SingleServerIRCBot):
         c.nick(c.get_nickname() + "_")
 
     def on_welcome(self, c, e):
-        for chan in self.channelset:
-            c.join(chan)
+        channels = self.channeld.get(c.server)
+        if channels:
+            for chan in channels:
+                c.join(chan)
 
     def _message_dispatch(self, c, e):
         nick = c.get_nickname()
