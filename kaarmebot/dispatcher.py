@@ -12,8 +12,8 @@ class MessageDispatcher:
         self.settings = settings
         self.routes = []
 
-    def add_route(self, restr, msgtype, handler, attr=None):
-        self.routes.append((re.compile(restr), msgtype, handler, attr))
+    def add_route(self, restr, handler, msgtypes, attr=None):
+        self.routes.append((re.compile(restr), handler, msgtypes, attr))
 
     def msg(self, msgtype, message, metadata):
         for h, res, a in self._match_generator(msgtype, message):
@@ -33,8 +33,8 @@ class MessageDispatcher:
             return handler(msg)
 
     def _match_generator(self, msgtype, matchstr):
-        for r, t, h, a in self.routes:
-            if msgtype == t:
+        for r, h, t, a in self.routes:
+            if msgtype in t:
                 res = r.match(matchstr)
                 if res:
                     yield h, res, a
