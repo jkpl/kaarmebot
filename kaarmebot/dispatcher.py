@@ -13,7 +13,7 @@ class MessageDispatcher:
         self.routes = []
 
     def add_route(self, restr, handler, msgtypes, attr=None):
-        self.routes.append((re.compile(restr), handler, msgtypes, attr))
+        self.routes.append((re_compile(restr), handler, msgtypes, attr))
 
     def msg(self, msgtype, message, metadata):
         for h, res, a in self._match_generator(msgtype, ' '.join(message)):
@@ -38,3 +38,8 @@ class MessageDispatcher:
                 res = r.match(matchstr)
                 if res:
                     yield h, res, a
+
+
+def re_compile(restr):
+    newstr = re.sub(r'{([^}]+)}', r'(?P<\1>.+)', restr)
+    return re.compile(newstr)

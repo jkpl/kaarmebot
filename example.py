@@ -17,6 +17,6 @@ if __name__ == '__main__':
         conf.update(json.loads(f.read()))
     app = BotApp(**conf)
     app.scan(example_plugin)
-    app.add_route("{nick}, (?P<msg>.+)", "echo1")
-    app.add_route("{nick}: (?P<msg>.+)", "echo2")
+    app.add_route("{nick}, {msg}", "echo1")
+    app.add_route("{nick}: {msg}", "echo2")
     app.start()

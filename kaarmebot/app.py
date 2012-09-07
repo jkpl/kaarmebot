@@ -46,8 +46,8 @@ class BotApp:
         self._scanner.scan(module)
 
     def add_plugin(self, handler, name, **settings):
-        name = settings.get('name') or name
-        self.plugins[name] = (handler, settings)
+        nid = settings.get('name') or name
+        self.plugins[nid] = (handler, settings)
 
     def start(self):
         self.bot.start()

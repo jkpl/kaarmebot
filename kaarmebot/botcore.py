@@ -23,17 +23,17 @@ class BotCore(SingleServerIRCBot):
 
     def _message_dispatch(self, c, e):
         nick = c.get_nickname()
-        target = e.target()
-        source = e.source()
-        args = [x.replace(nick, "{nick}") for x in e.arguments()]
+        metadata = {
+            'target': e.target(),
+            'source': e.source(),
+            'own_nick': nick
+        }
+        args = e.arguments()
         msgtype = e.eventtype()
-        self._call_callback(c, msgtype, args, target=target, source=source,
-                            own_nick=nick)
-
-    def _call_callback(self, connection, msgtype, message, **metadata):
-        for res in self.msgcallback(msgtype, message, metadata):
-            if res:
-                self.execute(connection, res)
+        results = self.msgcallback(msgtype, args, metadata)
+        for r in results:
+            if r:
+                self.execute(c, r)
 
     def execute(self, connection, d):
         for funname, arglist in d.iteritems():

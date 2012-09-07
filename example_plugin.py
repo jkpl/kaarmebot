@@ -8,8 +8,10 @@ class Echo:
     @plugin_config(name="echo1", msgtypes=("pubmsg",))
     def pubmsg(self):
         msg = self.message.matchdict.get('msg')
+        nick = self.message.matchdict.get('nick')
         target = self.message.metadata.get('target')
-        if msg:
+        own_nick = self.message.metadata.get('own_nick')
+        if msg and nick and nick == own_nick:
             return {'privmsg': ((target,'"%s"' % msg),)}
         return None
 
@@ -17,8 +19,10 @@ class Echo:
 @plugin_config(name="echo2", msgtypes=("pubmsg",))
 def echo_to_source(message):
     msg = message.matchdict.get('msg')
+    nick = message.matchdict.get('nick')
     target = message.metadata.get('target')
     source = nm_to_n(message.metadata.get('source'))
-    if msg:
+    own_nick = message.metadata.get('own_nick')
+    if msg and nick and nick == own_nick:
         return {'privmsg': ((target, "%s: %s" % (source, msg)),)}
     return None
