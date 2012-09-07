@@ -25,16 +25,26 @@ class BotCore(SingleServerIRCBot):
         target = e.target()
         source = e.source()
         args = e.arguments()[0].replace(c.get_nickname(), "{nick}")
-        cb = self.callbacks.get('pubmsg', None)
-        if cb:
-            cb(c, target, source, args)
+        self._call_callback(c, 'pubmsg', target, source, args)
 
     def on_privmsg(self, c, e):
         source = e.source()
         args = e.arguments()[0]
-        cb = self.callbacks.get('privmsg', None)
+        self._call_callback(c, 'privmsg', source, args)
+
+    def _call_callback(self, connection, cbname, *args):
+        cb = self.callbacks.get(cbname, None)
         if cb:
-            cb(c, source, args)
+            for res in cb(*args):
+                self.execute(connection, res)
+
+    def execute(self, connection, d):
+        if d:
+            for k, v in d.iteritems():
+                fun = getattr(connection, k, None)
+                if (isinstance(fun, types.FunctionType) or
+                    isinstance(fun, types.MethodType)):
+                    fun(*v)
 
     def join(self, channel):
         self.channelset.add(channel)
@@ -53,23 +63,23 @@ class MessageDispatcher:
         self.pubmsg_routes = pub
         self.privmsg_routes = priv
 
-    def pubmsg(self, connection, target, source, message):
+    def pubmsg(self, target, source, message):
         for h, res in self._match_generator(self.pubmsg_routes, message):
             d = res.groupdict()
             t = res.groups()
             if d:
-                h(connection, target, source, **d)
+                yield h(target, source, **d)
             else:
-                h(connection, target, source, *t)
+                yield h(target, source, *t)
 
-    def privmsg(self, connection, source, message):
+    def privmsg(self, source, message):
         for h, res in self._match_generator(self.privmsg_routes, message):
             d = res.groupdict()
             t = res.groups()
             if d:
-                h(connection, source, **d)
+                yield h(source, **d)
             else:
-                h(connection, source, *t)
+                yield h(source, *t)
 
     def _match_generator(self, routes, matchstr):
         for r, h in routes:

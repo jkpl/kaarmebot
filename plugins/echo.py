@@ -5,6 +5,7 @@ class Echo:
     def setup(self):
         print "Echo plugin setup"
 
-    def pubmsg(self, connection, target, source, msg=None):
+    def pubmsg(self, target, source, msg=None):
         if msg:
-            connection.privmsg(target, '"%s"' % msg)
+            return {'privmsg': (target,'"%s"' % msg)}
+        return None
