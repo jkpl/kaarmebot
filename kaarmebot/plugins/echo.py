@@ -1,9 +1,11 @@
 from irclib import nm_to_n
+from app import plugin_config
 
 class Echo:
     def __init__(self, message):
         self.message = message
 
+    @plugin_config(name="echo1", msgtypes=("pubmsg",))
     def pubmsg(self):
         msg = self.message.matchdict.get('msg')
         target = self.message.metadata.get('target')
@@ -12,6 +14,7 @@ class Echo:
         return None
 
 
+@plugin_config(name="echo2", msgtypes=("pubmsg",))
 def echo_to_source(message):
     msg = message.matchdict.get('msg')
     target = message.metadata.get('target')
