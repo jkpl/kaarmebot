@@ -1,5 +1,5 @@
 from irclib import nm_to_n
-from app import plugin_config
+from kaarmebot import plugin_config
 
 class Echo:
     def __init__(self, message):
