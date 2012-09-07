@@ -16,7 +16,7 @@ class Echo:
         return None
 
 
-@plugin_config(name="echo2", msgtypes=("pubmsg",))
+@plugin_config(name="echo2", msgtypes=("pubmsg", "privmsg"))
 def echo_to_source(message):
     msg = message.matchdict.get('msg')
     nick = message.matchdict.get('nick')
@@ -24,5 +24,8 @@ def echo_to_source(message):
     source = nm_to_n(message.metadata.get('source'))
     own_nick = message.metadata.get('own_nick')
     if msg and nick and nick == own_nick:
-        return {'privmsg': ((target, "%s: %s" % (source, msg)),)}
+        if target != own_nick:
+            return {'privmsg': ((target, "%s: %s" % (source, msg)),)}
+        else:
+            return {'privmsg': ((source, "%s: %s" % (source, msg)),)}
     return None
