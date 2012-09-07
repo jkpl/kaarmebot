@@ -17,21 +17,23 @@ class KaarmeBot:
         self.bot = BotCore(channels, servers, nickname, real_name,
                            self.dispatcher.msg)
 
+    def add_route(self, handler, pubmsg_regex=None, privmsg_regex=None,
+                  pubmsg_attr=None, privmsg_attr=None):
+        if pubmsg_regex:
+            self.dispatcher.add_route(pubmsg_regex, 'pubmsg', handler,
+                                      pubmsg_attr)
+        if privmsg_regex:
+            self.dispatcher.add_route(privmsg_regex, 'privmsg', handler,
+                                      privmsg_attr)
+
     def _init_plugins(self, plugins):
         for pld in plugins:
             plfun = read_plugin(pld.get('plugin'))
             if plfun:
-                self._init_one(plfun, pld)
-
-    def _init_one(self, pl, pld):
-        pubre = pld.get('pub_re')
-        privre = pld.get('priv_re')
-        privattr = pld.get('priv_attr')
-        if pubre:
-            self.dispatcher.add_route(pubre, 'pubmsg', pl, pld.get('pub_attr'))
-        if privre:
-            self.dispatcher.add_route(privre, 'privmsg', pl,
-                                      pld.get('priv_attr'))
+                pubre = pld.get('pub_re')
+                privre = pld.get('priv_re')
+                self.add_route(plfun, pubre, privre, pld.get('pub_attr'),
+                               pld.get('priv_attr'))
 
     def start(self):
         self.bot.start()
