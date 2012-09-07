@@ -10,39 +10,31 @@ from dispatcher import MessageDispatcher
 
 
 class KaarmeBot:
-    def __init__(self, channels, servers, nickname, real_name, plugins):
+    def __init__(self, channels, servers, nickname, real_name,
+                 plugin_settings, plugins):
         self.dispatcher = MessageDispatcher()
         self._init_plugins(plugins)
         self.bot = BotCore(channels, servers, nickname, real_name,
                            self.dispatcher.msg)
 
     def _init_plugins(self, plugins):
-        self.plugin_instances = []
-        for pl in plugins:
-            plugin_class = read_plugin(pl.get('plugin'))
-            if plugin_class:
-                pubre = pl.get('pub_re')
-                privre = pl.get('priv_re')
-                plsettings = pl.get('settings', {})
-                plugin = plugin_class(plsettings)
-                self.plugin_instances.append(plugin)
-                if pubre:
-                    self.dispatcher.add_route(pubre, 'pubmsg', plugin.pubmsg)
-                if privre:
-                    self.dispatcher.add_route(privre, 'privmsg',
-                                              plugin.privmsg)
+        for pld in plugins:
+            plfun = read_plugin(pld.get('plugin'))
+            if plfun:
+                self._init_one(plfun, pld)
+
+    def _init_one(self, pl, pld):
+        pubre = pld.get('pub_re')
+        privre = pld.get('priv_re')
+        privattr = pld.get('priv_attr')
+        if pubre:
+            self.dispatcher.add_route(pubre, 'pubmsg', pl, pld.get('pub_attr'))
+        if privre:
+            self.dispatcher.add_route(privre, 'privmsg', pl,
+                                      pld.get('priv_attr'))
 
     def start(self):
-        for pl in self.plugin_instances:
-            if getattr(pl, 'setup', None):
-                pl.setup()
         self.bot.start()
-
-    def die(self):
-        for pl in self.plugin_instances:
-            if getattr(pl, 'teardown', None):
-                pl.teardown()
-        self.bot.die()
 
 
 def read_plugin(pluginstr):

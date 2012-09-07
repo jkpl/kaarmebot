@@ -21,15 +21,15 @@ class BotCore(SingleServerIRCBot):
         target = e.target()
         source = e.source()
         args = e.arguments()[0].replace(c.get_nickname(), "{nick}")
-        self._call_callback(c, 'pubmsg', args, target, source)
+        self._call_callback(c, 'pubmsg', args, target=target, source=source)
 
     def on_privmsg(self, c, e):
         source = e.source()
         args = e.arguments()[0]
-        self._call_callback(c, 'privmsg', args, source)
+        self._call_callback(c, 'privmsg', args, target=target, source=source)
 
-    def _call_callback(self, connection, msgtype, *args):
-        for res in self.msgcallback(msgtype, *args):
+    def _call_callback(self, connection, msgtype, message, **metadata):
+        for res in self.msgcallback(msgtype, message, metadata):
             self.execute(connection, res)
 
     def execute(self, connection, d):
