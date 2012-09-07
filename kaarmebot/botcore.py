@@ -9,6 +9,8 @@ class BotCore(SingleServerIRCBot):
         SingleServerIRCBot.__init__(self, servers, nickname, real_name)
         self.channelset = set(channels)
         self.msgcallback = msgcallback
+        self.connection.add_global_handler("all_events",
+                                           self._message_dispatch, -10)
 
     def on_nicknameinuse(self, c, e):
         c.nick(c.get_nickname() + "_")
@@ -17,16 +19,14 @@ class BotCore(SingleServerIRCBot):
         for chan in self.channelset:
             c.join(chan)
 
-    def on_pubmsg(self, c, e):
+    def _message_dispatch(self, c, e):
+        nick = c.get_nickname()
         target = e.target()
         source = e.source()
-        args = e.arguments()[0].replace(c.get_nickname(), "{nick}")
-        self._call_callback(c, 'pubmsg', args, target=target, source=source)
-
-    def on_privmsg(self, c, e):
-        source = e.source()
-        args = e.arguments()[0]
-        self._call_callback(c, 'privmsg', args, target=target, source=source)
+        args = [x.replace(nick, "{nick}") for x in e.arguments()]
+        msgtype = e.eventtype()
+        self._call_callback(c, msgtype, args, target=target, source=source,
+                            own_nick=nick)
 
     def _call_callback(self, connection, msgtype, message, **metadata):
         for res in self.msgcallback(msgtype, message, metadata):

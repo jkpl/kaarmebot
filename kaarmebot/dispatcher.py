@@ -16,7 +16,7 @@ class MessageDispatcher:
         self.routes.append((re.compile(restr), handler, msgtypes, attr))
 
     def msg(self, msgtype, message, metadata):
-        for h, res, a in self._match_generator(msgtype, message):
+        for h, res, a in self._match_generator(msgtype, ' '.join(message)):
             d = res.groupdict()
             if d:
                 msg = Message(self.settings, msgtype, metadata, message, d)
