@@ -6,51 +6,31 @@ import types
 import sys
 import json
 from botcore import BotCore
-
-
-class MessageDispatcher:
-    def __init__(self, routes):
-        self.routes = routes
-
-    def msg(self, msgtype, message, *metadata):
-        for h, res in self._match_generator(self.routes, msgtype, message):
-            d = res.groupdict()
-            t = res.groups()
-            if d:
-                yield h(*metadata, **d)
-            else:
-                yield h(*(metadata + t))
-
-    def _match_generator(self, routes, msgtype, matchstr):
-        for r, t, h in routes:
-            res = r.match(matchstr)
-            if res and t == msgtype:
-                yield h, res
+from dispatcher import MessageDispatcher
 
 
 class KaarmeBot:
     def __init__(self, channels, servers, nickname, real_name, plugins):
-        routes = self._init_plugins(plugins)
-        self.dispatcher = MessageDispatcher(routes)
+        self.dispatcher = MessageDispatcher()
+        self._init_plugins(plugins)
         self.bot = BotCore(channels, servers, nickname, real_name,
                            self.dispatcher.msg)
 
     def _init_plugins(self, plugins):
         self.plugin_instances = []
-        routes = []
         for pl in plugins:
-            plugin_class = read_plugin(pl.get('plugin', None))
+            plugin_class = read_plugin(pl.get('plugin'))
             if plugin_class:
-                pubre = pl.get('pub_re', None)
-                privre = pl.get('priv_re', None)
+                pubre = pl.get('pub_re')
+                privre = pl.get('priv_re')
                 plsettings = pl.get('settings', {})
                 plugin = plugin_class(plsettings)
                 self.plugin_instances.append(plugin)
                 if pubre:
-                    routes.append((gen_route(pubre), 'pubmsg', plugin.pubmsg))
+                    self.dispatcher.add_route(pubre, 'pubmsg', plugin.pubmsg)
                 if privre:
-                    routes.append((gen_route(privre), 'privmsg', plugin.privmsg))
-        return routes
+                    self.dispatcher.add_route(privre, 'privmsg',
+                                              plugin.privmsg)
 
     def start(self):
         for pl in self.plugin_instances:
@@ -63,15 +43,6 @@ class KaarmeBot:
             if getattr(pl, 'teardown', None):
                 pl.teardown()
         self.bot.die()
-
-
-def gen_route(restr):
-    try:
-        prog = re.compile(restr)
-        return prog
-    except Exception:
-        print "Failed to compile, skipping:", route
-    return None
 
 
 def read_plugin(pluginstr):
