@@ -5,101 +5,39 @@ import re
 import types
 import sys
 import json
-from ircbot import SingleServerIRCBot
-
-
-class BotCore(SingleServerIRCBot):
-    def __init__(self, channels, servers, nickname, real_name, callbacks):
-        SingleServerIRCBot.__init__(self, servers, nickname, real_name)
-        self.channelset = set(channels)
-        self.callbacks = callbacks
-
-    def on_nicknameinuse(self, c, e):
-        c.nick(c.get_nickname() + "_")
-
-    def on_welcome(self, c, e):
-        for chan in self.channelset:
-            c.join(chan)
-
-    def on_pubmsg(self, c, e):
-        target = e.target()
-        source = e.source()
-        args = e.arguments()[0].replace(c.get_nickname(), "{nick}")
-        self._call_callback(c, 'pubmsg', target, source, args)
-
-    def on_privmsg(self, c, e):
-        source = e.source()
-        args = e.arguments()[0]
-        self._call_callback(c, 'privmsg', source, args)
-
-    def _call_callback(self, connection, cbname, *args):
-        cb = self.callbacks.get(cbname, None)
-        if cb:
-            for res in cb(*args):
-                self.execute(connection, res)
-
-    def execute(self, connection, d):
-        if d:
-            for k, v in d.iteritems():
-                fun = getattr(connection, k, None)
-                if (isinstance(fun, types.FunctionType) or
-                    isinstance(fun, types.MethodType)):
-                    fun(*v)
-
-    def join(self, channel):
-        self.channelset.add(channel)
-        self.connection.join(channel)
-
-    def part(self, channel, message=""):
-        try:
-            self.channelset.remove(channel)
-            self.connection.part(channel, message)
-        except KeyError:
-            pass
+from botcore import BotCore
 
 
 class MessageDispatcher:
-    def __init__(self, pub, priv):
-        self.pubmsg_routes = pub
-        self.privmsg_routes = priv
+    def __init__(self, routes):
+        self.routes = routes
 
-    def pubmsg(self, target, source, message):
-        for h, res in self._match_generator(self.pubmsg_routes, message):
+    def msg(self, msgtype, message, *metadata):
+        for h, res in self._match_generator(self.routes, msgtype, message):
             d = res.groupdict()
             t = res.groups()
             if d:
-                yield h(target, source, **d)
+                yield h(*metadata, **d)
             else:
-                yield h(target, source, *t)
+                yield h(*(metadata + t))
 
-    def privmsg(self, source, message):
-        for h, res in self._match_generator(self.privmsg_routes, message):
-            d = res.groupdict()
-            t = res.groups()
-            if d:
-                yield h(source, **d)
-            else:
-                yield h(source, *t)
-
-    def _match_generator(self, routes, matchstr):
-        for r, h in routes:
+    def _match_generator(self, routes, msgtype, matchstr):
+        for r, t, h in routes:
             res = r.match(matchstr)
-            if res:
+            if res and t == msgtype:
                 yield h, res
 
 
 class KaarmeBot:
     def __init__(self, channels, servers, nickname, real_name, plugins):
         routes = self._init_plugins(plugins)
-        self.dispatcher = MessageDispatcher(**routes)
-        callbacks = {'pubmsg': self.dispatcher.pubmsg,
-                     'privmsg': self.dispatcher.privmsg}
-        self.bot = BotCore(channels, servers, nickname, real_name, callbacks)
+        self.dispatcher = MessageDispatcher(routes)
+        self.bot = BotCore(channels, servers, nickname, real_name,
+                           self.dispatcher.msg)
 
     def _init_plugins(self, plugins):
         self.plugin_instances = []
-        pub = []
-        priv = []
+        routes = []
         for pl in plugins:
             plugin_class = read_plugin(pl.get('plugin', None))
             if plugin_class:
@@ -109,10 +47,10 @@ class KaarmeBot:
                 plugin = plugin_class(plsettings)
                 self.plugin_instances.append(plugin)
                 if pubre:
-                    pub.append((gen_route(pubre), plugin.pubmsg))
+                    routes.append((gen_route(pubre), 'pubmsg', plugin.pubmsg))
                 if privre:
-                    priv.append((gen_route(privre), plugin.privmsg))
-        return {'pub': pub, 'priv': priv}
+                    routes.append((gen_route(privre), 'privmsg', plugin.privmsg))
+        return routes
 
     def start(self):
         for pl in self.plugin_instances:
