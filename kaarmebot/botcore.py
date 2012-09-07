@@ -30,15 +30,15 @@ class BotCore(SingleServerIRCBot):
 
     def _call_callback(self, connection, msgtype, message, **metadata):
         for res in self.msgcallback(msgtype, message, metadata):
-            self.execute(connection, res)
+            if res:
+                self.execute(connection, res)
 
     def execute(self, connection, d):
-        if d:
-            for k, v in d.iteritems():
-                fun = getattr(connection, k, None)
-                if (isinstance(fun, types.FunctionType) or
-                    isinstance(fun, types.MethodType)):
-                    fun(*v)
+        for funname, arglist in d.iteritems():
+            fun = getattr(connection, funname, None)
+            if fun_or_method(fun):
+                for args in arglist:
+                    fun(*args)
 
     def join(self, channel):
         self.channelset.add(channel)
@@ -50,3 +50,7 @@ class BotCore(SingleServerIRCBot):
             self.connection.part(channel, message)
         except KeyError:
             pass
+
+def fun_or_method(ob):
+    return (isinstance(ob, types.FunctionType) or
+            isinstance(ob, types.MethodType))

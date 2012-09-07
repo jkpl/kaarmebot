@@ -8,7 +8,7 @@ class Echo:
         msg = self.message.matchdict.get('msg')
         target = self.message.metadata.get('target')
         if msg:
-            return {'privmsg': (target,'"%s"' % msg)}
+            return {'privmsg': ((target,'"%s"' % msg),)}
         return None
 
 
@@ -17,5 +17,5 @@ def echo_to_source(message):
     target = message.metadata.get('target')
     source = nm_to_n(message.metadata.get('source'))
     if msg:
-        return {'privmsg': (target, "%s: %s" % (source, msg))}
+        return {'privmsg': ((target, "%s: %s" % (source, msg)),)}
     return None

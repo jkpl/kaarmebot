@@ -29,6 +29,7 @@ class MessageDispatcher:
             if isinstance(fun, types.MethodType):
                 return fun()
         else:
+            res = handler(msg)
             return handler(msg)
 
     def _match_generator(self, msgtype, matchstr):
