@@ -1,6 +1,5 @@
 import re
 import types
-from multiprocessing import Pool
 from collections import namedtuple
 
 
@@ -10,20 +9,17 @@ Message = namedtuple("Message", ['settings', 'type', 'metadata',
 
 class MessageDispatcher:
     def __init__(self, settings=None, workers=4):
-        self._pool = Pool(processes=workers)
         self.settings = settings
         self.routes = []
 
     def add_route(self, restr, handler, msgtypes, attr=None):
         self.routes.append((re_compile(restr), handler, msgtypes, attr))
 
-    def msg(self, msgtype, message, metadata, callback):
+    def msg(self, msgtype, message, metadata):
         for h, res, a in self._match_generator(msgtype, ' '.join(message)):
             d = res.groupdict()
-            if d:
-                msg = Message(self.settings, msgtype, metadata, message, d)
-                self._pool.apply_async(execute_handler, [h, a, msg],
-                                       callback=callback)
+            msg = Message(self.settings, msgtype, metadata, message, d)
+            yield (h, a, msg)
 
     def _match_generator(self, msgtype, matchstr):
         for r, h, t, a in self.routes:

@@ -37,7 +37,7 @@ class BotCore(SingleServerIRCBot):
         }
         args = e.arguments()
         msgtype = e.eventtype()
-        self.msgcallback(msgtype, args, metadata, _execute_callback)
+        self.msgcallback(_execute_callback, msgtype, args, metadata)
 
 
 def fun_or_method(ob):

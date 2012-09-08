@@ -3,8 +3,9 @@
 
 import types
 import venusian
+from multiprocessing import Pool
 from botcore import BotCore
-from dispatcher import MessageDispatcher
+from dispatcher import MessageDispatcher, execute_handler
 
 
 class plugin_config:
@@ -30,9 +31,10 @@ class BotApp:
     def __init__(self, channels, servers, nickname, real_name, workers=4,
                  plugin_settings=None):
         self.plugins = {}
-        self.dispatcher = MessageDispatcher(plugin_settings, workers)
+        self._pool = Pool(processes=workers)
+        self.dispatcher = MessageDispatcher(plugin_settings)
         self.bot = BotCore(channels, servers, nickname, real_name,
-                           self.dispatcher.msg)
+                           self._message_callback)
         self._scanner = venusian.Scanner(add_plugin=self.add_plugin)
 
     def add_route(self, regex, name, msgtypes=None, attr=None):
@@ -41,6 +43,11 @@ class BotApp:
                     tuple(settings.get('msgtypes', [])))
         attr = attr or settings.get('attr')
         self.dispatcher.add_route(regex, handler, msgtypes, attr)
+
+    def _message_callback(self, callback, *args):
+        for handler_args in self.dispatcher.msg(*args):
+            self._pool.apply_async(execute_handler, handler_args,
+                                   callback=callback)
 
     def scan(self, module):
         self._scanner.scan(module)
