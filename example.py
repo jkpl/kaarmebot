@@ -19,4 +19,6 @@ if __name__ == '__main__':
     app.scan(example_plugin)
     app.add_route("{nick}, {msg}", "echo1")
     app.add_route("{nick}: {msg}", "echo2")
+    app.add_route(".*https?://[.\w]*youtube\.com/watch\?(?P<path>[^\s]+).*", "utube")
+    app.add_route(".*https?://youtu\.be/(?P<vid>[^\s]+).*", "utube")
     app.start()

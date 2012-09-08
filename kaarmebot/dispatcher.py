@@ -41,5 +41,5 @@ def execute_handler(handler, attr, msg):
 
 
 def re_compile(restr):
-    newstr = re.sub(r'{([^}]+)}', r'(?P<\1>.+)', restr)
+    newstr = re.sub(r'{([^,\d}]+)}', r'(?P<\1>.+)', restr)
     return re.compile(newstr)

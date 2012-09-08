@@ -23,11 +23,12 @@ class BotCore(SingleServerIRCBot):
 
     def _message_dispatch(self, c, e):
         def _execute_callback(data):
-            for funname, arglist in data.iteritems():
-                fun = getattr(c, funname, None)
-                if fun_or_method(fun):
-                    for args in arglist:
-                        fun(*args)
+            if data:
+                for funname, arglist in data.iteritems():
+                    fun = getattr(c, funname, None)
+                    if fun_or_method(fun):
+                        for args in arglist:
+                            fun(*args)
 
         nick = c.get_nickname()
         metadata = {
