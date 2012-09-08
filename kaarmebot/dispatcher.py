@@ -38,7 +38,6 @@ def execute_handler(handler, attr, msg):
             if isinstance(fun, types.MethodType):
                 return fun()
         else:
-            res = handler(msg)
             return handler(msg)
     except:
         logging.exception("Error in plugin")

@@ -8,23 +8,20 @@ from botcore import BotCore
 from dispatcher import MessageDispatcher, execute_handler
 
 
-class plugin_config:
-    def __init__(self, **settings):
-        self.__dict__.update(settings)
-
-    def __call__(self, wrapped):
-        settings = self.__dict__.copy()
+def plugin_config(**settings):
+    def decorator(wrapped):
+        sets = settings.copy()
 
         def callback(scanner, name, ob):
-            if settings.get('name') is None:
-                settings['name'] = name
-            scanner.add_plugin(ob, **settings)
+            if sets.get('name') is None:
+                sets['name'] = name
+            scanner.add_plugin(ob, **sets)
 
         info = venusian.attach(wrapped, callback, category='plugins')
-        if info.scope == 'class' and settings.get('attr') is None:
-            settings['attr'] = wrapped.__name__
-
+        if info.scope == 'class' and sets.get('attr') is None:
+            sets['attr'] = wrapped.__name__
         return wrapped
+    return decorator
 
 
 class BotApp:
