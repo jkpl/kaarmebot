@@ -50,9 +50,6 @@ def utube(message):
                        vid, '?v=2&alt=json'))
         res = urlopen(url).read()
         d = json.loads(res)
-        try:
-            title = d['entry']['title']['$t']
-            return {'privmsg': ((target, "YouTube: %s" % title),)}
-        except KeyError:
-            pass
+        title = d['entry']['title']['$t']
+        return {'privmsg': ((target, "YouTube: %s" % title),)}
     return None

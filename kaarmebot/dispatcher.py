@@ -1,5 +1,6 @@
 import re
 import types
+import logging
 from collections import namedtuple
 
 
@@ -30,14 +31,17 @@ class MessageDispatcher:
 
 
 def execute_handler(handler, attr, msg):
-    if attr:
-        h = handler(msg)
-        fun = getattr(h, attr, None)
-        if isinstance(fun, types.MethodType):
-            return fun()
-    else:
-        res = handler(msg)
-        return handler(msg)
+    try:
+        if attr:
+            h = handler(msg)
+            fun = getattr(h, attr, None)
+            if isinstance(fun, types.MethodType):
+                return fun()
+        else:
+            res = handler(msg)
+            return handler(msg)
+    except:
+        logging.exception("Error in plugin")
 
 
 def re_compile(restr):
