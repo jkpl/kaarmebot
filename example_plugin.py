@@ -1,5 +1,6 @@
 from irclib import nm_to_n
 from kaarmebot import plugin_config
+import time
 
 class Echo:
     def __init__(self, message):
@@ -10,8 +11,11 @@ class Echo:
         msg = self.message.matchdict.get('msg')
         nick = self.message.matchdict.get('nick')
         target = self.message.metadata.get('target')
+        source = nm_to_n(self.message.metadata.get('source'))
         own_nick = self.message.metadata.get('own_nick')
         if msg and nick and nick == own_nick:
+            print '%s said "%s"' % (source, msg)
+            time.sleep(6) # do some blocking action
             return {'privmsg': ((target,'"%s"' % msg),)}
         return None
 

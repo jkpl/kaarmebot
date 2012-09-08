@@ -22,6 +22,13 @@ class BotCore(SingleServerIRCBot):
                 c.join(chan)
 
     def _message_dispatch(self, c, e):
+        def _execute_callback(data):
+            for funname, arglist in data.iteritems():
+                fun = getattr(c, funname, None)
+                if fun_or_method(fun):
+                    for args in arglist:
+                        fun(*args)
+
         nick = c.get_nickname()
         metadata = {
             'target': e.target(),
@@ -30,28 +37,8 @@ class BotCore(SingleServerIRCBot):
         }
         args = e.arguments()
         msgtype = e.eventtype()
-        results = self.msgcallback(msgtype, args, metadata)
-        for r in results:
-            if r:
-                self.execute(c, r)
+        self.msgcallback(msgtype, args, metadata, _execute_callback)
 
-    def execute(self, connection, d):
-        for funname, arglist in d.iteritems():
-            fun = getattr(connection, funname, None)
-            if fun_or_method(fun):
-                for args in arglist:
-                    fun(*args)
-
-    def join(self, channel):
-        self.channelset.add(channel)
-        self.connection.join(channel)
-
-    def part(self, channel, message=""):
-        try:
-            self.channelset.remove(channel)
-            self.connection.part(channel, message)
-        except KeyError:
-            pass
 
 def fun_or_method(ob):
     return (isinstance(ob, types.FunctionType) or

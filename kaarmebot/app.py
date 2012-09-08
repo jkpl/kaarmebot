@@ -27,10 +27,10 @@ class plugin_config:
 
 
 class BotApp:
-    def __init__(self, channels, servers, nickname, real_name,
+    def __init__(self, channels, servers, nickname, real_name, workers=4,
                  plugin_settings=None):
         self.plugins = {}
-        self.dispatcher = MessageDispatcher(plugin_settings)
+        self.dispatcher = MessageDispatcher(plugin_settings, workers)
         self.bot = BotCore(channels, servers, nickname, real_name,
                            self.dispatcher.msg)
         self._scanner = venusian.Scanner(add_plugin=self.add_plugin)

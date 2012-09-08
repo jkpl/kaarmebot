@@ -1,5 +1,6 @@
 import re
 import types
+from multiprocessing import Pool
 from collections import namedtuple
 
 
@@ -8,29 +9,21 @@ Message = namedtuple("Message", ['settings', 'type', 'metadata',
 
 
 class MessageDispatcher:
-    def __init__(self, settings=None):
+    def __init__(self, settings=None, workers=4):
+        self._pool = Pool(processes=workers)
         self.settings = settings
         self.routes = []
 
     def add_route(self, restr, handler, msgtypes, attr=None):
         self.routes.append((re_compile(restr), handler, msgtypes, attr))
 
-    def msg(self, msgtype, message, metadata):
+    def msg(self, msgtype, message, metadata, callback):
         for h, res, a in self._match_generator(msgtype, ' '.join(message)):
             d = res.groupdict()
             if d:
                 msg = Message(self.settings, msgtype, metadata, message, d)
-                yield self.execute(h, a, msg)
-
-    def execute(self, handler, attr, msg):
-        if attr:
-            h = handler(msg)
-            fun = getattr(h, attr, None)
-            if isinstance(fun, types.MethodType):
-                return fun()
-        else:
-            res = handler(msg)
-            return handler(msg)
+                self._pool.apply_async(execute_handler, [h, a, msg],
+                                       callback=callback)
 
     def _match_generator(self, msgtype, matchstr):
         for r, h, t, a in self.routes:
@@ -38,6 +31,17 @@ class MessageDispatcher:
                 res = r.match(matchstr)
                 if res:
                     yield h, res, a
+
+
+def execute_handler(handler, attr, msg):
+    if attr:
+        h = handler(msg)
+        fun = getattr(h, attr, None)
+        if isinstance(fun, types.MethodType):
+            return fun()
+    else:
+        res = handler(msg)
+        return handler(msg)
 
 
 def re_compile(restr):
