@@ -36,9 +36,7 @@ def execute_handler(handler, msg):
         attr = msg.plugin_settings.get('attr')
         if attr:
             h = handler(msg)
-            fun = getattr(h, attr, None)
-            if isinstance(fun, types.MethodType):
-                return fun()
+            return getattr(h, attr)()
         else:
             return handler(msg)
     except:

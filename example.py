@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from kaarmebot import BotApp
 import example_plugin
 import json
@@ -10,7 +13,10 @@ app_conf = {
         ('irc.server.net', 6667, 'secretpassword')
     ],
     'nickname': 'BotName',
-    'real_name': 'Sir Bot McBotsworth, Esq.'
+    'real_name': 'Sir Bot McBotsworth, Esq.',
+    'plugin_settings': {
+        'questionmarks': 4
+    }
 }
 
 plugin_bindings = [

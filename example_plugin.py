@@ -14,13 +14,18 @@ class Echo:
         self.target = message.metadata.get('target')
         self.source = nm_to_n(message.metadata.get('source'))
         self.own_nick = message.metadata.get('own_nick')
+        self.questionmarks = message.settings.get('questionmarks', 0)
+
+    def add_questionmarks(self, msg):
+        return msg + ('?' * self.questionmarks)
 
     @plugin_config(name="echo1", msgtypes=("pubmsg",))
     def pubmsg(self):
         if self.msg and self.nick and self.nick == self.own_nick:
             print '%s said "%s"' % (self.source, self.msg)
-            time.sleep(6) # do some blocking action
-            return {'privmsg': ((self.target,'"%s"' % self.msg),)}
+            time.sleep(6)  # do some blocking action
+            msg = '"%s"' % self.add_questionmarks(self.msg)
+            return {'privmsg': ((self.target, msg),)}
         return None
 
 
