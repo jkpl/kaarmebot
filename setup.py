@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='kaarmebot',
-    version='0.0.1',
+    version='0.0.2',
     author='Jaakko Pallari',
     author_email='jkpl@lepovirta.org',
     packages=['kaarmebot'],
