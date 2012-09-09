@@ -34,10 +34,10 @@ class BotApp:
                            self._message_callback)
         self._scanner = venusian.Scanner(add_plugin=self.add_plugin)
 
-    def add_binding(self, regex, name, **moresettings):
+    def add_binding(self, pattern, name, **moresettings):
         handler, settings = self.plugins[name]
         settings.update(moresettings)
-        self.dispatcher.add_binding(regex, handler, settings)
+        self.dispatcher.add_binding(pattern, handler, settings)
 
     def _message_callback(self, callback, *args):
         for handler_args in self.dispatcher.msg(*args):

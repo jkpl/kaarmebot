@@ -2,6 +2,7 @@
 
 from ircbot import SingleServerIRCBot
 import types
+import logging
 
 
 class BotCore(SingleServerIRCBot):
@@ -23,12 +24,13 @@ class BotCore(SingleServerIRCBot):
 
     def _message_dispatch(self, c, e):
         def _execute_callback(data):
-            if data:
-                for funname, arglist in data.iteritems():
-                    fun = getattr(c, funname, None)
-                    if fun_or_method(fun):
-                        for args in arglist:
-                            fun(*args)
+            try:
+                it = data.iteritems() if isinstance(data, dict) else data
+                for funname, arglist in it:
+                    for args in arglist:
+                        getattr(c, funname)(*args)
+            except:
+                logging.exception("Error occurred when executing return data.")
 
         nick = c.get_nickname()
         metadata = {
@@ -39,8 +41,3 @@ class BotCore(SingleServerIRCBot):
         args = e.arguments()
         msgtype = e.eventtype()
         self.msgcallback(_execute_callback, msgtype, args, metadata)
-
-
-def fun_or_method(ob):
-    return (isinstance(ob, types.FunctionType) or
-            isinstance(ob, types.MethodType))

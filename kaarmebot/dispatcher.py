@@ -13,8 +13,8 @@ class MessageDispatcher:
         self.settings = settings
         self.routes = []
 
-    def add_binding(self, restr, handler, settings):
-        self.routes.append((re_compile(restr), handler, settings))
+    def add_binding(self, pattern, handler, settings):
+        self.routes.append((re_compile(pattern), handler, settings))
 
     def msg(self, msgtype, message, metadata):
         for h, res, s in self._match_generator(msgtype, ' '.join(message)):
@@ -23,10 +23,10 @@ class MessageDispatcher:
             yield (h, msg)
 
     def _match_generator(self, msgtype, matchstr):
-        for regex, handler, settings in self.routes:
+        for r, handler, settings in self.routes:
             t = settings.get('msgtypes') or []
             if msgtype in t:
-                res = regex.match(matchstr)
+                res = r.match(matchstr)
                 if res:
                     yield handler, res, settings
 
