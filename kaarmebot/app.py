@@ -34,12 +34,10 @@ class BotApp:
                            self._message_callback)
         self._scanner = venusian.Scanner(add_plugin=self.add_plugin)
 
-    def add_route(self, regex, name, msgtypes=None, attr=None):
+    def add_binding(self, regex, name, **moresettings):
         handler, settings = self.plugins[name]
-        msgtypes = (tuple(msgtypes or []) +
-                    tuple(settings.get('msgtypes', [])))
-        attr = attr or settings.get('attr')
-        self.dispatcher.add_route(regex, handler, msgtypes, attr)
+        settings.update(moresettings)
+        self.dispatcher.add_binding(regex, handler, settings)
 
     def _message_callback(self, callback, *args):
         for handler_args in self.dispatcher.msg(*args):

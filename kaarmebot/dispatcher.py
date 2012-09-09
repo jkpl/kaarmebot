@@ -4,8 +4,8 @@ import logging
 from collections import namedtuple
 
 
-Message = namedtuple("Message", ['settings', 'type', 'metadata',
-                                 'message', 'matchdict'])
+Message = namedtuple("Message", ['settings', 'type', 'metadata', 'message',
+                                 'matchdict', 'plugin_settings'])
 
 
 class MessageDispatcher:
@@ -13,25 +13,27 @@ class MessageDispatcher:
         self.settings = settings
         self.routes = []
 
-    def add_route(self, restr, handler, msgtypes, attr=None):
-        self.routes.append((re_compile(restr), handler, msgtypes, attr))
+    def add_binding(self, restr, handler, settings):
+        self.routes.append((re_compile(restr), handler, settings))
 
     def msg(self, msgtype, message, metadata):
-        for h, res, a in self._match_generator(msgtype, ' '.join(message)):
+        for h, res, s in self._match_generator(msgtype, ' '.join(message)):
             d = res.groupdict()
-            msg = Message(self.settings, msgtype, metadata, message, d)
-            yield (h, a, msg)
+            msg = Message(self.settings, msgtype, metadata, message, d, s)
+            yield (h, msg)
 
     def _match_generator(self, msgtype, matchstr):
-        for r, h, t, a in self.routes:
+        for regex, handler, settings in self.routes:
+            t = settings.get('msgtypes') or []
             if msgtype in t:
-                res = r.match(matchstr)
+                res = regex.match(matchstr)
                 if res:
-                    yield h, res, a
+                    yield handler, res, settings
 
 
-def execute_handler(handler, attr, msg):
+def execute_handler(handler, msg):
     try:
+        attr = msg.plugin_settings.get('attr')
         if attr:
             h = handler(msg)
             fun = getattr(h, attr, None)
