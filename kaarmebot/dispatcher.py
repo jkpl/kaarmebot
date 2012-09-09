@@ -18,19 +18,15 @@ class MessageDispatcher:
         self.routes.append((re_compile(pattern), handler, settings))
 
     def msg(self, matchstr, messagedata):
-        for h, res, s in self._match_generator(matchstr, messagedata):
-            d = res.groupdict()
-            msg = Message(settings=self.settings, plugin_settings=s,
-                          matchdict=d, content=messagedata)
-            yield (h, msg)
-
-    def _match_generator(self, matchstr, messagedata):
-        it = ((r,h,s) for r,h,s in self.routes
+        it = ((p, h, s) for p, h, s in self.routes
               if self.message_filter(s, messagedata))
-        for r, handler, settings in it:
-            res = r.match(matchstr)
+        for pattern, handler, settings in it:
+            res = pattern.match(matchstr)
             if res:
-                yield handler, res, settings
+                d = res.groupdict()
+                msg = Message(settings=self.settings, plugin_settings=settings,
+                              matchdict=d, content=messagedata)
+                yield (handler, msg)
 
 
 def execute_handler(handler, msg):
