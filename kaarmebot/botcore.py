@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from ircbot import SingleServerIRCBot
+from collections import namedtuple
 import types
 import logging
+
+
+IrcMsg = namedtuple("IrcMsg", ['msgtype', 'message', 'target', 'source',
+                               'own_nick'])
 
 
 class BotCore(SingleServerIRCBot):
@@ -32,12 +37,9 @@ class BotCore(SingleServerIRCBot):
             except:
                 logging.exception("Error occurred when executing return data.")
 
-        nick = c.get_nickname()
-        metadata = {
-            'target': e.target(),
-            'source': e.source(),
-            'own_nick': nick
-        }
         args = e.arguments()
-        msgtype = e.eventtype()
-        self.msgcallback(_execute_callback, msgtype, args, metadata)
+        message = IrcMsg(msgtype=e.eventtype(), message=args,
+                         target=e.target(), source=e.source(),
+                         own_nick=c.get_nickname())
+        matchstr = ' '.join(args)
+        self.msgcallback(_execute_callback, matchstr, message)

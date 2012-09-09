@@ -26,7 +26,8 @@ class BotApp:
                  plugin_settings=None):
         self.plugins = {}
         self._pool = Pool(processes=workers)
-        self.dispatcher = MessageDispatcher(plugin_settings)
+        self.dispatcher = MessageDispatcher(plugin_settings,
+                                            irc_message_filter)
         self.bot = BotCore(channels, servers, nickname, real_name,
                            self._message_callback)
         self._scanner = venusian.Scanner(add_plugin=self.add_plugin)
@@ -36,8 +37,8 @@ class BotApp:
         settings.update(moresettings)
         self.dispatcher.add_binding(pattern, handler, settings)
 
-    def _message_callback(self, callback, *args):
-        for handler_args in self.dispatcher.msg(*args):
+    def _message_callback(self, callback, *args, **kwargs):
+        for handler_args in self.dispatcher.msg(*args, **kwargs):
             self._pool.apply_async(execute_handler, handler_args,
                                    callback=callback)
 
@@ -50,3 +51,13 @@ class BotApp:
 
     def start(self):
         self.bot.start()
+
+
+def irc_message_filter(settings, message):
+    plugin_msgtypes = settings.get('msgtypes')
+    plugin_targets = settings.get('targets')
+    msgtypematch = (plugin_msgtypes is None or
+                    message.msgtype in plugin_msgtypes)
+    targetmatch = (plugin_targets is None or
+                   message.target in plugin_targets)
+    return msgtypematch and targetmatch
