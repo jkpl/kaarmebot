@@ -1,10 +1,11 @@
+import re
+import time
+import json
+import gevent
 from irclib import nm_to_n
 from kaarmebot import plugin_config
 from urllib import urlopen
 from urlparse import parse_qs
-import re
-import time
-import json
 
 
 class Echo:
@@ -23,7 +24,7 @@ class Echo:
     def pubmsg(self):
         if self.msg and self.nick and self.nick == self.own_nick:
             print '%s said "%s"' % (self.source, self.msg)
-            time.sleep(6)  # do some blocking action
+            gevent.sleep(6)  # do some blocking action
             msg = '"%s"' % self.add_questionmarks(self.msg)
             return {'privmsg': ((self.target, msg),)}
         return None

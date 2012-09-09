@@ -1,6 +1,5 @@
 import re
 import types
-import logging
 from collections import namedtuple
 
 
@@ -17,7 +16,7 @@ class MessageDispatcher:
     def add_binding(self, pattern, handler, settings):
         self.routes.append((re_compile(pattern), handler, settings))
 
-    def msg(self, matchstr, messagedata):
+    def get_matches(self, matchstr, messagedata):
         it = ((p, h, s) for p, h, s in self.routes
               if self.message_filter(s, messagedata))
         for pattern, handler, settings in it:
@@ -27,18 +26,6 @@ class MessageDispatcher:
                 msg = Message(settings=self.settings, plugin_settings=settings,
                               matchdict=d, content=messagedata)
                 yield (handler, msg)
-
-
-def execute_handler(handler, msg):
-    try:
-        attr = msg.plugin_settings.get('attr')
-        if attr:
-            h = handler(msg)
-            return getattr(h, attr)()
-        else:
-            return handler(msg)
-    except:
-        logging.exception("Error in plugin")
 
 
 def re_compile(restr):

@@ -14,6 +14,7 @@ app_conf = {
     ],
     'nickname': 'BotName',
     'real_name': 'Sir Bot McBotsworth, Esq.',
+    'workers': 20,
     'plugin_settings': {
         'questionmarks': 4
     }

@@ -1,9 +1,11 @@
-# -*- coding: utf-8 -*-
-
-from ircbot import SingleServerIRCBot
-from collections import namedtuple
 import types
 import logging
+from gevent import monkey; monkey.patch_all()
+from ircbot import SingleServerIRCBot
+from collections import namedtuple
+
+
+logger = logging.getLogger(__name__)
 
 
 IrcMsg = namedtuple("IrcMsg", ['msgtype', 'message', 'target', 'source',
@@ -35,7 +37,7 @@ class BotCore(SingleServerIRCBot):
                     for args in arglist:
                         getattr(c, funname)(*args)
             except:
-                logging.exception("Error occurred when executing return data.")
+                logger.exception("Error occurred when executing return data.")
 
         args = e.arguments()
         message = IrcMsg(msgtype=e.eventtype(), message=args,
