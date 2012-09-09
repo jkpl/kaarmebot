@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='kaarmebot',
-    version='0.0.2',
+    version='0.0.3',
     author='Jaakko Pallari',
     author_email='jkpl@lepovirta.org',
     packages=['kaarmebot'],
@@ -11,8 +11,9 @@ setup(
     description='A naive, silly little IRC bot framework made in Python',
     long_description=open('README.rst').read(),
     install_requires=[
+        'gevent >= 0.13.8',
         'python-irclib == 0.4.8',
-        'venusian == 1.0a7'
+        'venusian >= 1.0a7'
     ],
     classifiers=[
         'License :: OSI Approved :: BSD License',
