@@ -12,7 +12,7 @@ tests_require = [
 
 setup(
     name='kaarmebot',
-    version='0.0.3',
+    version='0.1.0',
     author='Jaakko Pallari',
     author_email='jkpl@lepovirta.org',
     packages=find_packages(exclude='tests'),
