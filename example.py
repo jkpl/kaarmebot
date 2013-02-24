@@ -2,37 +2,33 @@
 # -*- coding: utf-8 -*-
 
 from kaarmebot import BotApp
+from kaarmebot import predicates as p
 import example_plugin
-import json
 
 app_conf = {
-    'channels': {
-        'irc.server.net': ["#somechannel", "#someotherchannel"]
-    },
-    'servers': [
-        ('irc.server.net', 6667, 'secretpassword')
-    ],
-    'nickname': 'BotName',
-    'real_name': 'Sir Bot McBotsworth, Esq.',
-    'workers': 20,
-    'plugin_settings': {
-        'questionmarks': 4
+    'servers': {
+        ('someserver.com', 6667): {
+            'real_name': 'Sir Bot McBotsworth, Esq.',
+            'nick': 'BotName',
+            'username': 'botname',
+            'channels': ('#something',)
+        }
     }
 }
 
 plugin_bindings = [
-    ('{nick}, {msg}', 'echo1'),
-    ('{nick}: {msg}', 'echo2'),
-    ('.*https?://[.\w]*youtube\.com/watch\?(?P<path>[^\s]+).*', 'utube'),
-    ('.*https?://youtu\.be/(?P<vid>[^\s]+).*', 'utube'),
+     (p.All(p.PrivMsg, p.BodyRegEx('(?P<nick>.*): (?P<msg>.*)')), 'echo'),
+     (p.All(p.PrivMsg,
+            p.BodyRegEx('.*https?://[.\w]*youtube\.com/watch\?[^\s]+.*')),
+      'utube'),
+     (p.All(p.PrivMsg,
+            p.BodyRegEx('.*https?://youtu\.be/[^\s]+.*')),
+      'utube'),
 ]
 
 if __name__ == '__main__':
-    with open('example.json') as f:
-        app_conf.update(json.loads(f.read()))
-
-    app = BotApp(**app_conf)
+    app = BotApp(app_conf)
     app.scan(example_plugin)
-    for pattern, name in plugin_bindings:
-        app.add_binding(pattern, name)
+    for predicate, name in plugin_bindings:
+        app.add_binding(predicate, name)
     app.start()

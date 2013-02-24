@@ -1,7 +1,6 @@
 from setuptools import setup, find_packages
 
 requires = [
-    'python-irclib == 0.4.8',
     'gevent >= 0.13.8',
     'venusian >= 1.0a7'
 ]

@@ -1,61 +1,51 @@
 import re
-import time
 import json
-import gevent
-from irclib import nm_to_n
-from kaarmebot import plugin_config
+from kaarmebot.app import plugin_config
+from kaarmebot import irc
 from urllib import urlopen
 from urlparse import parse_qs
 
 
-class Echo:
-    def __init__(self, message):
-        self.msg = message.matchdict.get('msg')
-        self.nick = message.matchdict.get('nick')
-        self.target = message.content.target
-        self.source = nm_to_n(message.content.source)
-        self.own_nick = message.content.own_nick
-        self.questionmarks = message.settings.get('questionmarks', 0)
-
-    def add_questionmarks(self, msg):
-        return msg + ('?' * self.questionmarks)
-
-    @plugin_config(name="echo1", msgtypes=("pubmsg",))
-    def pubmsg(self):
-        if self.msg and self.nick and self.nick == self.own_nick:
-            print '%s said "%s"' % (self.source, self.msg)
-            gevent.sleep(6)  # do some blocking action
-            msg = '"%s"' % self.add_questionmarks(self.msg)
-            return {'privmsg': ((self.target, msg),)}
-        return None
-
-
-@plugin_config(name="echo2", msgtypes=("pubmsg", "privmsg"))
-def echo_to_source(message):
-    msg = message.matchdict.get('msg')
-    nick = message.matchdict.get('nick')
-    target = message.content.target
-    source = nm_to_n(message.content.source)
-    own_nick = message.content.own_nick
-    if msg and nick and nick == own_nick:
+@plugin_config(name="echo")
+def echo_to_source(message, settings):
+    d = re.match('(?P<nick>.*): (?P<msg>.*)', message.body).groupdict()
+    msg = d.get('msg')
+    own_nick = d.get('nick')
+    target = message.parameters[0]
+    source = irc.string_to_person(message.name).nick
+    if msg:
         if target != own_nick:
-            return {'privmsg': ((target, "%s: %s" % (source, msg)),)}
+            return irc.privmsg(target, "%s: %s" % (source, msg))
         else:
-            return {'privmsg': ((source, "%s: %s" % (source, msg)),)}
+            return irc.privmsg(source, "%s: %s" % (source, msg))
     return None
 
 
-@plugin_config(name="utube", msgtypes=("pubmsg",))
-def utube(message):
-    target = message.content.target
-    vid = message.matchdict.get('vid')
-    if vid is None:
-        vid = parse_qs(message.matchdict.get('path', '')).get('v')[0]
+@plugin_config(name="utube")
+def utube(message, settings):
+    target = message.parameters[0]
+    vid = get_youtube_video_id_from_url(message.body)
     if vid:
         url = ''.join(('https://gdata.youtube.com/feeds/api/videos/',
                        vid, '?v=2&alt=json'))
         res = urlopen(url).read()
         d = json.loads(res)
         title = d['entry']['title']['$t']
-        return {'privmsg': ((target, "YouTube: %s" % title),)}
+        return irc.privmsg(target, "YouTube: %s" % title)
+    return None
+
+
+def get_youtube_video_id_from_url(contents):
+    short_url_match = re.match('.*https?://youtu\.be/(?P<vid>[^\s]+).*',
+                               contents)
+    if short_url_match:
+        return short_url_match.groupdict().get('vid')
+
+    long_url_match = re.match(
+        '.*https?://[.\w]*youtube\.com/watch\?(?P<path>[^\s]+).*',
+        contents)
+
+    if long_url_match:
+        return parse_qs(long_url_match.groupdict().get('path', '')).get('v')[0]
+
     return None
