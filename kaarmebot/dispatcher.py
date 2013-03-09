@@ -24,24 +24,13 @@ class MessageDispatcher:
         if rc:
             rc.remove((predicate, handler))
 
-    def dispatch(self, message):
+    def get_handlers_for_message(self, message):
         rc = self.routing_classes.get(message.__class__)
         if rc:
-            return self._generate_handler_results(rc, message)
-        return []
+            for predicate, handler in rc:
+                if predicate(message):
+                    yield handler
 
-    def _generate_handler_results(self, predicate_handler_pairs, message):
-        results = []
-        for predicate, handler in predicate_handler_pairs:
-            match, result = get_predicate_handler_result_for_message(
-                predicate, handler, message)
-            if match:
-                results.append(result)
-        return results
-
-
-def get_predicate_handler_result_for_message(predicate, handler, message):
-    result = predicate(message)
-    if result:
-        return True, handler(message)
-    return False, None
+    def dispatch(self, message):
+        handler_generator = self.get_handlers_for_message(message)
+        return [handler(message) for handler in handler_generator]
