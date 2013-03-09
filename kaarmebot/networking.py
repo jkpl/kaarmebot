@@ -40,11 +40,11 @@ class SimpleTCPLineClient:
 
     def start(self):
         self.sock.connect(self.address)
-        file = self.sock.makefile()
+        stream = self.sock.makefile()
         self._running = True
         while self._running:
             try:
-                self._call_message_handlers(file.readline())
+                self._call_message_handlers(stream.readline())
             except IOError:
                 self.close()
 
