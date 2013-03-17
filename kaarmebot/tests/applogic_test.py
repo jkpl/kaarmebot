@@ -156,7 +156,7 @@ class PluginHandlerTest(CommonTestCase):
         self.assertEquals(self.request.message, self.contents)
         self.assertEquals(self.request.source, self.source)
         self.assertEquals(self.request.source_settings, self.source_settings)
-        self.assertEquals(self.request.settings, self.app_settings)
+        self.assertEquals(self.request.app_settings, self.app_settings)
         self.assertEquals(self.request.plugin_settings, self.settings)
 
     def test_calling_handler_passes_executable_result_to_dispatcher(self):

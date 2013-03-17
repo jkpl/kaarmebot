@@ -2,9 +2,8 @@ import collections as c
 
 
 PluginRequest = c.namedtuple(
-    'PluginRequest', ['message', 'source',
-                      'source_settings', 'settings',
-                      'plugin_settings'])
+    'PluginRequest', ['message', 'source', 'source_settings',
+                      'app_settings', 'plugin_settings'])
 Message = c.namedtuple(
     'Message', ['source', 'target', 'contents'])
 
