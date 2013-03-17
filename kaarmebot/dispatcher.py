@@ -15,10 +15,6 @@ class MessageDispatcher:
         else:
             self.routing_classes[routing_class] = [(predicate, handler)]
 
-    def add_bindings(self, *bindings):
-        for binding in bindings:
-            self.add_binding(*binding)
-
     def remove_binding(self, routing_class, predicate, handler):
         rc = self.routing_classes.get(routing_class)
         if rc:
