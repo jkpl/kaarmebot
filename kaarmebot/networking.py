@@ -1,57 +1,38 @@
 import logging
-from gevent.socket import socket, AF_INET, SOCK_STREAM
+import gevent as g
+import gevent.socket as s
 
 
 logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 
-class SimpleTCPLineClient:
-    def __init__(self, address):
+class SimpleTCPLineClient(g.Greenlet):
+    def __init__(self, address, message_handler, close_handler):
+        g.Greenlet.__init__(self)
         self.address = address
-        self.sock = socket(AF_INET, SOCK_STREAM)
-        self._running = False
-        self._message_handlers = []
-        self._close_handlers = []
-
-    def add_message_handler(self, handler):
-        self._message_handlers.append(handler)
-
-    def remove_message_handler(self, handler):
-        self._message_handlers.remove(handler)
-
-    def add_close_handler(self, handler):
-        self._close_handlers.append(handler)
-
-    def remove_close_handler(self, handler):
-        self._close_handlers.remove(handler)
+        self.message_handler = message_handler
+        self.close_handler = close_handler
+        self.sock = s.socket(s.AF_INET, s.SOCK_STREAM)
+        self.running = False
 
     def close(self):
-        if self._running:
-            self._running = False
+        if self.running:
+            self.running = False
             self.sock.close()
-            self._call_close_handlers()
-
-    def is_running(self):
-        return self._running
+            self.close_handler()
 
     def send(self, message):
         self.sock.sendall(message + '\r\n')
 
-    def start(self):
+    def _run(self):
         self.sock.connect(self.address)
         stream = self.sock.makefile()
-        self._running = True
-        while self._running:
-            try:
-                self._call_message_handlers(stream.readline())
-            except IOError:
-                self.close()
-
-    def _call_message_handlers(self, line):
-        for handler in self._message_handlers:
-            handler(line)
-
-    def _call_close_handlers(self):
-        for handler in self._close_handlers:
-            handler()
+        self.running = True
+        try:
+            while self.running:
+                self.message_handler(stream.readline())
+        except Exception:
+            logger.exception('Error occurred while reading from socket.')
+        finally:
+            self.close()

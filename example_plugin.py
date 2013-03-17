@@ -1,13 +1,14 @@
 import re
 import json
-from kaarmebot.app import plugin_config
+from kaarmebot.plugin import plugin_config
 from kaarmebot import irc
 from urllib import urlopen
 from urlparse import parse_qs
 
 
 @plugin_config(name="echo")
-def echo_to_source(message, settings):
+def echo_to_source(request):
+    message = request.message
     d = re.match('(?P<nick>.*): (?P<msg>.*)', message.body).groupdict()
     msg = d.get('msg')
     own_nick = d.get('nick')
@@ -22,7 +23,8 @@ def echo_to_source(message, settings):
 
 
 @plugin_config(name="utube")
-def utube(message, settings):
+def utube(request):
+    message = request.message
     target = message.parameters[0]
     vid = get_youtube_video_id_from_url(message.body)
     if vid:

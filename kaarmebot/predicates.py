@@ -34,6 +34,11 @@ class Any(Predicate):
         return False
 
 
+class Equals(Predicate):
+    def match(self, matchable):
+        return matchable == self.args[0]
+
+
 class AttrIn(Predicate):
     def setup(self):
         self.return_bool = self.kwargs.get('return_bool', False)
@@ -68,14 +73,19 @@ class RegEx(Predicate):
         return self.reprog.match(target)
 
 
-# IRC specific
+# Messaging specific
 OnContents = f.partial(MatchAttribute, 'contents')
+ClientStarted = OnContents(Equals('started'))
 
+
+# IRC specific
 def Command(*args, **kwargs):
     return OnContents(AttrIn('command', *args, **kwargs))
 
+
 def Name(*args, **kwargs):
     return OnContents(AttrIn('name', *args, **kwargs))
+
 
 BodyRegEx = lambda regex: OnContents(RegEx(regex, attr='body'))
 Ping = Command('PING')

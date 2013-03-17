@@ -1,1 +1,2 @@
-from app import plugin_config, BotApp
+from app import KaarmeBotApp, DefaultKaarmeBotApp
+from plugin import plugin_config

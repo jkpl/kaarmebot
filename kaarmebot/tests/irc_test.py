@@ -3,10 +3,10 @@ from kaarmebot import irc
 
 
 class TestIrcCommands(unittest.TestCase):
-    def test_any_cmd(self):
-        self.assertEquals('foobar', irc.any_cmd('foobar'))
-        self.assertEquals(irc.raw_cmd('COMMAND', 'param', 'body'),
-                          irc.any_cmd('COMMAND', 'param', 'body'))
+    def test_any_command(self):
+        self.assertEquals('foobar', irc.any_command('foobar'))
+        self.assertEquals(irc.raw_command('COMMAND', 'param', 'body'),
+                          irc.any_command('COMMAND', 'param', 'body'))
 
     def test_join(self):
         channels = (('#foo', 'foo'), ('#bar', 'bar'), '#foobar')
@@ -56,10 +56,10 @@ class TestIrcCommands(unittest.TestCase):
         self.assertEquals('QUIT :message',
                           irc.quit('message'))
 
-    def test_raw_cmd(self):
+    def test_raw_command(self):
         self.assertEquals('COMMAND param1 param2 :body_of_message',
-                          irc.raw_cmd('COMMAND', ('param1', 'param2'),
-                                      'body_of_message'))
+                          irc.raw_command('COMMAND', ('param1', 'param2'),
+                                          'body_of_message'))
 
     def test_topic(self):
         self.assertEquals('TOPIC #channel', irc.topic('#channel'))

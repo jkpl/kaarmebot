@@ -8,12 +8,20 @@ IrcMessage = namedtuple('IrcMsg', ['name', 'command', 'parameters',
 Person = namedtuple('Host', ['nick', 'username', 'hostname', 'full'])
 
 
+## Exceptions
+class MessageParseError(Exception):
+    def __init__(self, message, value, occurred_in):
+        self.message = message
+        self.value = value
+        self.occurred_in = occurred_in
+
+
 ## Commands
-def any_cmd(*args, **kwargs):
+def any_command(*args, **kwargs):
     if len(args) == 1 and not kwargs:
         return args[0]
     else:
-        return raw_cmd(*args, **kwargs)
+        return raw_command(*args, **kwargs)
 
 
 def join(channels_and_passwords):
@@ -21,67 +29,70 @@ def join(channels_and_passwords):
                                            lists=2, padding_item='')
     channels_joined = ','.join(channels)
     passwords_joined = ','.join(passwords)
-    return raw_cmd('JOIN', (channels_joined, passwords_joined))
+    return raw_command('JOIN', (channels_joined, passwords_joined))
 
 
 def kick(channel, nick, reason=None):
-    return raw_cmd('KICK', (channel, nick), reason)
+    return raw_command('KICK', (channel, nick), reason)
 
 
 def mode(channel, *args):
     mode_args = (channel,) + args
-    return raw_cmd('MODE', mode_args)
+    return raw_command('MODE', mode_args)
 
 
 def names(*channels):
     channels_joined = ','.join(channels) if channels else None
-    return raw_cmd('NAMES', channels_joined)
+    return raw_command('NAMES', channels_joined)
 
 
 def nick(user_nick):
-    return raw_cmd('NICK', user_nick)
+    return raw_command('NICK', user_nick)
 
 
 def part(*channels):
     channels_joined = ','.join(channels) if channels else None
-    return raw_cmd('PART', channels_joined)
+    return raw_command('PART', channels_joined)
 
 
 def password(password):
-    return raw_cmd('PASS', password)
+    return raw_command('PASS', password)
 
 
 def privmsg(target, message):
-    return raw_cmd('PRIVMSG', target, message)
+    return raw_command('PRIVMSG', target, message)
 
 
 def pong(name):
-    return raw_cmd('PONG', body=name)
+    return raw_command('PONG', body=name)
 
 
 def quit(message=None):
-    return raw_cmd('QUIT', body=message)
+    return raw_command('QUIT', body=message)
 
 
-def raw_cmd(command, parameters=None, body=None):
-    cmd = [command.upper().decode('utf-8')]
-    if parameters:
-        if type(parameters) in (list, tuple):
-            p = [to_unicode(x) for x in parameters if x]
-            cmd.append(' '.join(p))
-        else:
-            cmd.append(parameters.decode('utf-8'))
-    if body:
-        cmd.append(':' + body.decode('utf-8'))
-    return ' '.join(cmd)
+def raw_command(command, parameters=None, body=None):
+    try:
+        cmd = [command.upper().decode('utf-8')]
+        if parameters:
+            if type(parameters) in (list, tuple):
+                p = [to_unicode(x) for x in parameters if x]
+                cmd.append(' '.join(p))
+            else:
+                cmd.append(parameters.decode('utf-8'))
+        if body:
+            cmd.append(':' + body.decode('utf-8'))
+        return ' '.join(cmd)
+    except (TypeError, ValueError) as e:
+        raise ParseError('Failed to parse command', message, e)
 
 
 def topic(channel, new_topic=None):
-    return raw_cmd('TOPIC', channel, new_topic)
+    return raw_command('TOPIC', channel, new_topic)
 
 
 def user(username, usermode, real_name):
-    return raw_cmd('USER', (username, usermode, '*'), real_name)
+    return raw_command('USER', (username, usermode, '*'), real_name)
 
 
 ## Message parsing
@@ -98,8 +109,8 @@ def parse_message(message):
         else:
             _, rest = pick_first_part(rest, ':')
             return IrcMessage(None, first, None, rest, decoded)
-    except ValueError as e:
-        raise MessageParseError("Failed to parse message", message, e)
+    except (TypeError, ValueError) as e:
+        raise ParseError('Failed to parse message', message, e)
 
 
 def pick_first_part(message, delimeter=' '):
@@ -109,13 +120,6 @@ def pick_first_part(message, delimeter=' '):
         rest = ' '.join(splitted[1:]) or None
         return (first, rest)
     return (None, None)
-
-
-class MessageParseError(Exception):
-    def __init__(self, message, value, occurred_in):
-        self.message = message
-        self.value = value
-        self.occurred_in = occurred_in
 
 
 ## Helpers
