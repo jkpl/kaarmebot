@@ -17,9 +17,12 @@ logger = logging.getLogger(__name__)
 
 class DefaultKaarmeBotApp(al.BotApp):
     def __init__(self, app_settings):
+        pool_size = app_settings.get('dispatcher_pool_size', 100)
+        logging_enabled = app_settings.get('enable_logging', False)
         dispatcher = DispatcherEngine(
             d.MessageDispatcher(),
-            size=app_settings.get('dispatcher_pool_size', 100))
+            enable_logging=logging_enabled,
+            size=pool_size)
         super(DefaultKaarmeBotApp, self).__init__(
             client_provider=ClientGreenlet,
             dispatcher=dispatcher,
@@ -40,9 +43,11 @@ class KaarmeBotApp(DefaultKaarmeBotApp):
 
 
 class DispatcherEngine(pool.Pool):
-    def __init__(self, dispatcher, size=None, greenlet_class=None):
+    def __init__(self, dispatcher, enable_logging=False,
+                 size=None, greenlet_class=None):
         pool.Pool.__init__(self, size, greenlet_class)
         self.dispatcher = dispatcher
+        self.logging_enabled = enable_logging
 
     def add_binding(self, *args, **kwargs):
         self.dispatcher.add_binding(*args, **kwargs)
@@ -55,6 +60,8 @@ class DispatcherEngine(pool.Pool):
             handler(message)
 
         handlers = self.dispatcher.get_handlers_for_message(message)
+        if self.logging_enabled:
+            logger.debug('Dispatched message: %s', message)
         self.map_async(run_handler, handlers)
 
 
