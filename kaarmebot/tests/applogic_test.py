@@ -104,8 +104,8 @@ class ClientTest(CommonTestCase):
 
         m.verify(self.dispatcher).remove_binding(
             al.Command, m.any(types.FunctionType), m.any(types.FunctionType))
-        self.assert_message_matches(dispatched_message,
-            al.ClientStatusMessage, 'close')
+        self.assert_message_matches(
+            dispatched_message, al.ClientStatusMessage, 'close')
 
 
 class PluginStub(object):

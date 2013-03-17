@@ -42,6 +42,7 @@ class BotApp(object):
 
     def create_close_message_matcher(self):
         servers = self.app_settings['servers']
+
         def is_close_message(message):
             return (message.contents == 'close' and message.source in servers)
 
@@ -217,6 +218,7 @@ def message_matcher_generator(name):
 
 def get_attribute_as_function(obj, attr):
     callable_attribute = getattr(obj, attr)
+
     def inner(*args, **kwargs):
         return callable_attribute(*args, **kwargs)
 

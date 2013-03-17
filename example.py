@@ -18,13 +18,13 @@ app_conf = {
 }
 
 plugin_bindings = [
-     (p.All(p.PrivMsg, p.BodyRegEx('.*: .*')), 'echo'),
-     (p.All(p.PrivMsg,
-            p.BodyRegEx('.*https?://[.\w]*youtube\.com/watch\?[^\s]+.*')),
-      'utube'),
-     (p.All(p.PrivMsg,
-            p.BodyRegEx('.*https?://youtu\.be/[^\s]+.*')),
-      'utube'),
+    (p.All(p.PrivMsg, p.BodyRegEx('.*: .*')), 'echo'),
+    (p.All(p.PrivMsg,
+           p.BodyRegEx('.*https?://[.\w]*youtube\.com/watch\?[^\s]+.*')),
+     'utube'),
+    (p.All(p.PrivMsg,
+           p.BodyRegEx('.*https?://youtu\.be/[^\s]+.*')),
+     'utube'),
 ]
 
 if __name__ == '__main__':

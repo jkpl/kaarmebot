@@ -46,7 +46,7 @@ class AttrIn(Predicate):
     def match(self, matchable):
         attr_value = getattr(matchable, self.args[0], None)
         targets = self.args[1:]
-        if attr_value != None and attr_value in targets:
+        if attr_value is not None and attr_value in targets:
             if self.return_bool:
                 return True
             return attr_value
