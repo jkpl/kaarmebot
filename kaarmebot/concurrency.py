@@ -38,11 +38,14 @@ class Actor(g.Greenlet):
     def receive(self, message):
         raise NotImplementedError('Receive method isn\'t implemented.')
 
+    def actor_ready(self):
+        return True
+
     def _run(self):
         self.running = True
         try:
             while self.running:
-                if not self.inbox.empty():
+                if self.actor_ready() and not self.inbox.empty():
                     self.receive(self.inbox.get())
                 g.sleep(self.sleep_count)
         except ActorInterrupt as e:
