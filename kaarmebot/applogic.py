@@ -156,7 +156,11 @@ class Client(object):
         self.dispatcher.dispatch(client_message)
 
     def handle_command(self, message):
-        self.client.put(message)
+        commands = message.contents
+        if not type(commands) in (tuple, list):
+            commands = (commands,)
+        for command in commands:
+            self.client.put(command)
 
 
 class PluginHandler(object):

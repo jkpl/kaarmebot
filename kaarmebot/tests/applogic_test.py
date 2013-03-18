@@ -68,12 +68,15 @@ class ClientTest(CommonTestCase):
         self.assertEquals(message.source, self.name)
         self.assertEquals(message.contents, 'started')
 
-    def test_calling_command_handler_passes_message_to_inner_client(self):
-        message = 'some message'
+    def test_command_handler_passes_each_command_to_client(self):
+        command1 = 'some command'
+        command2 = 'other command'
+        message = al.Command(None, None, (command1, command2))
 
         self.command_handler(message)
 
-        m.verify(self.provided_client).put(message)
+        m.verify(self.provided_client).put(command1)
+        m.verify(self.provided_client).put(command2)
 
     def test_message_matcher_gives_true_only_when_message_target_is_name(self):
         valid_message = al.Message(None, self.name, None)

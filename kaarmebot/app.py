@@ -99,21 +99,10 @@ class ClientSender(c.Actor):
         return self.client.running
 
     def receive(self, message):
-        msg = message
         try:
-            if isinstance(message, al.Message):
-                msg = message.contents
-            if msg:
-                self.send_commands(msg)
+            self.client.send(message)
         except IOError:
             logger.exception('Error occurred while sending message.')
-
-    def send_commands(self, commands):
-        command_list = commands
-        if not type(command_list) in (tuple, list):
-            command_list = (command_list,)
-        for command in command_list:
-            self.client.send(command)
 
     def __str__(self):
         return repr(self.client.address)
