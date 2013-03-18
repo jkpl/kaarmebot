@@ -21,9 +21,9 @@ class Command(Message):
 
 
 class BotApp(object):
-    def __init__(self, client_provider, dispatcher, concurrency_manager,
+    def __init__(self, network_client_provider, dispatcher, concurrency_manager,
                  message_parser, plugin_manager, logger, app_settings):
-        self.client_provider = client_provider
+        self.network_client_provider = network_client_provider
         self.dispatcher = dispatcher
         self.concurrency_manager = concurrency_manager
         self.message_parser = message_parser
@@ -32,7 +32,7 @@ class BotApp(object):
         self.app_settings = app_settings
 
         self.plugin_manager.plugin_configurer = self.plugin_configurer
-        self.wrapped_client_provider = self.create_wrapped_client_provider()
+        self.client_provider = self.create_client_provider()
         self.connection_starter = self.create_connection_starter()
 
         self.dispatcher.add_binding(
@@ -51,13 +51,13 @@ class BotApp(object):
     def create_connection_starter(self):
         return ConnectionStarter(
             servers=self.app_settings['servers'],
-            client_provider=self.wrapped_client_provider,
+            client_provider=self.client_provider,
             concurrency_manager=self.concurrency_manager)
 
-    def create_wrapped_client_provider(self):
+    def create_client_provider(self):
         message_parser = self.message_parser
         dispatcher = self.dispatcher
-        client_provider = self.client_provider
+        network_client_provider = self.network_client_provider
 
         def create_client(name, server_conf):
             client = Client(
@@ -65,7 +65,7 @@ class BotApp(object):
                 address=server_conf['address'],
                 message_parser=message_parser,
                 dispatcher=dispatcher,
-                client_provider=client_provider)
+                network_client_provider=network_client_provider)
             return client.client
 
         return create_client
@@ -125,7 +125,7 @@ class ConnectionStarter(object):
 
 class Client(object):
     def __init__(self, name, address, message_parser, dispatcher,
-                 client_provider):
+                 network_client_provider):
         self.name = name
         self.message_parser = message_parser
         self.dispatcher = dispatcher
@@ -139,7 +139,7 @@ class Client(object):
             (Command, message_matcher, command_handler),
         )
 
-        self.client = client_provider(address, message_handler, close_handler)
+        self.client = network_client_provider(address, message_handler, close_handler)
         add_bindings_to_dispatcher(self.bindings, self.dispatcher)
         self.dispatcher.dispatch(
             ClientStatusMessage(self.name, None, 'started'))

@@ -2,16 +2,16 @@ import unittest
 from kaarmebot import dispatcher
 
 
-class TestMessage:
+class Message:
     def __init__(self, val):
         self.val = val
 
 
-class TestMessageOne(TestMessage):
+class MessageOne(Message):
     pass
 
 
-class TestMessageTwo(TestMessage):
+class MessageTwo(Message):
     pass
 
 
@@ -20,17 +20,17 @@ class TestMessageDispatcher(unittest.TestCase):
         self.callback_one_called = 0
         self.callback_two_called = 0
         self.callback_three_called = 0
-        self.message1 = TestMessageOne('some message')
-        self.message2 = TestMessageTwo(True)
-        self.message3 = TestMessageTwo(False)
+        self.message1 = MessageOne('some message')
+        self.message2 = MessageTwo(True)
+        self.message3 = MessageTwo(False)
 
         self.dispatcher = dispatcher.MessageDispatcher()
         self.dispatcher.add_binding(
-            TestMessageOne, self.predicate_one, self.callback_one)
+            MessageOne, self.predicate_one, self.callback_one)
         self.dispatcher.add_binding(
-            TestMessageTwo, self.predicate_two, self.callback_two)
+            MessageTwo, self.predicate_two, self.callback_two)
         self.dispatcher.add_binding(
-            TestMessageOne, self.predicate_one, self.callback_three)
+            MessageOne, self.predicate_one, self.callback_three)
 
     def predicate_one(self, message):
         return True
@@ -56,7 +56,7 @@ class TestMessageDispatcher(unittest.TestCase):
 
     def test_bindings_can_be_removed(self):
         self.dispatcher.remove_binding(
-            TestMessageOne, self.predicate_one, self.callback_one)
+            MessageOne, self.predicate_one, self.callback_one)
         self.dispatcher.dispatch(self.message1)
 
         self.assertEquals(0, self.callback_one_called)

@@ -24,7 +24,7 @@ class DefaultKaarmeBotApp(al.BotApp):
             enable_logging=logging_enabled,
             size=pool_size)
         super(DefaultKaarmeBotApp, self).__init__(
-            client_provider=ClientGreenlet,
+            network_client_provider=NetworkClientGreenlet,
             dispatcher=dispatcher,
             concurrency_manager=pool.Group(),
             message_parser=irc.parse_message,
@@ -65,10 +65,10 @@ class DispatcherEngine(pool.Pool):
         self.map_async(run_handler, handlers)
 
 
-class ClientGreenlet(g.Greenlet):
+class NetworkClientGreenlet(g.Greenlet):
     def __init__(self, address, message_handler, close_handler):
         g.Greenlet.__init__(self)
-        self.client = n.SimpleTCPLineClient(
+        self.client = n.SimpleSocketGreenlet(
             address, message_handler, close_handler)
         self.message_sender = ClientSender(self.client)
 

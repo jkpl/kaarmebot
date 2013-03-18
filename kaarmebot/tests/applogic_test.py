@@ -19,7 +19,7 @@ class CommonTestCase(unittest.TestCase):
         self.concurrency_manager = m.mock()
         self.plugin_manager = m.mock()
 
-        self.client_provider = u.FakeProvider(self.provided_client)
+        self.network_client_provider = u.FakeProvider(self.provided_client)
         self.dispatch_captor = u.ArgumentCaptor()
         self.bindings_captor = u.ArgumentCaptor()
 
@@ -33,7 +33,7 @@ class CommonTestCase(unittest.TestCase):
         m.verifyNoMoreInteractions(self.logger)
 
 
-class ClientTest(CommonTestCase):
+class TestClient(CommonTestCase):
     name = 'some name'
     address = 'some address'
 
@@ -44,25 +44,25 @@ class ClientTest(CommonTestCase):
             address=self.address,
             message_parser=self.message_parser,
             dispatcher=self.dispatcher,
-            client_provider=self.client_provider)
+            network_client_provider=self.network_client_provider)
 
-        self.client_provider_arguments = self.client_provider.last_arguments
+        self.ncp_arguments = self.network_client_provider.last_arguments
         self.binding_arguments = self.bindings_captor.last_arguments
-        self.message_handler = self.client_provider_arguments[1]
-        self.close_handler = self.client_provider_arguments[2]
+        self.message_handler = self.ncp_arguments[1]
+        self.close_handler = self.ncp_arguments[2]
         self.message_matcher = self.binding_arguments[1]
         self.command_handler = self.binding_arguments[2]
 
-    def test_client_is_created_using_client_provider_on_construct(self):
+    def test_client_is_created_using_network_client_provider(self):
         self.assertEquals(self.provided_client, self.client.client)
 
-    def test_address_is_passed_to_client_provider_on_construct(self):
-        self.assertIn(self.address, self.client_provider_arguments)
+    def test_address_is_passed_to_network_client_provider(self):
+        self.assertIn(self.address, self.ncp_arguments)
 
-    def test_command_bindings_are_set_to_dispatcher_on_construct(self):
+    def test_command_bindings_are_set_to_dispatcher(self):
         self.assertIn(al.Command, self.binding_arguments)
 
-    def test_client_started_message_is_dispatcher_on_construct(self):
+    def test_client_started_message_is_dispatcher(self):
         message = self.dispatch_captor.last_arguments[0]
 
         self.assertEquals(message.source, self.name)
@@ -121,7 +121,7 @@ class PluginStub(object):
         return self.result
 
 
-class PluginHandlerTest(CommonTestCase):
+class TestPluginHandler(CommonTestCase):
     name = 'some_name'
     executable_result = 'some result'
     source = 'some source'
@@ -183,7 +183,7 @@ class PluginHandlerTest(CommonTestCase):
         self.assert_message_matches_command(message, PluginStub.result)
 
 
-class ConnectionStarterTest(CommonTestCase):
+class TestConnectionStarter(CommonTestCase):
     def setUp(self):
         self.setup_module()
 
@@ -195,14 +195,15 @@ class ConnectionStarterTest(CommonTestCase):
                         self.server2_key: self.server2_conf}
 
         self.connection_starter = al.ConnectionStarter(
-            self.servers, self.concurrency_manager, self.client_provider)
+            self.servers, self.concurrency_manager,
+            self.network_client_provider)
 
     def test_connections_are_started_for_known_servers(self):
         message = al.Message(self.server1_key, None, None)
         self.connection_starter(message)
 
         m.verify(self.concurrency_manager).start(self.provided_client)
-        arguments = self.client_provider.last_arguments
+        arguments = self.network_client_provider.last_arguments
         self.assertIn(self.server1_key, arguments)
         self.assertIn(self.server1_conf, arguments)
 
@@ -218,7 +219,7 @@ class ConnectionStarterTest(CommonTestCase):
         m.verify(self.concurrency_manager, times=2).start(self.provided_client)
 
 
-class BotAppTest(CommonTestCase):
+class TestBotApp(CommonTestCase):
     def setUp(self):
         self.setup_module()
 
@@ -235,13 +236,13 @@ class BotAppTest(CommonTestCase):
         self.botapp = al.BotApp(
             dispatcher=self.dispatcher,
             concurrency_manager=self.concurrency_manager,
-            client_provider=self.client_provider,
+            network_client_provider=self.network_client_provider,
             plugin_manager=self.plugin_manager,
             message_parser=self.message_parser,
             logger=self.logger,
             app_settings=self.app_settings)
 
-    def test_close_handling_binding_is_set_on_construct(self):
+    def test_close_handling_binding_is_set(self):
         arguments = self.bindings_captor.last_arguments
 
         self.assertEquals(arguments[0], al.ClientStatusMessage)
@@ -269,17 +270,17 @@ class BotAppTest(CommonTestCase):
         self.assertEquals(handler.concurrency_manager,
                           self.concurrency_manager)
         self.assertEquals(handler.client_provider,
-                          self.botapp.wrapped_client_provider)
+                          self.botapp.client_provider)
 
-    def test_wrapped_client_provider_creates_proper_clients(self):
-        client = self.botapp.wrapped_client_provider(
+    def test_client_provider_creates_proper_clients(self):
+        client = self.botapp.client_provider(
             self.server1_key, self.server1_conf)
 
-        client_provider_arguments = self.client_provider.last_arguments
+        ncp_arguments = self.network_client_provider.last_arguments
         binding_arguments = self.bindings_captor.last_arguments
 
         self.assertEquals(client, self.provided_client)
-        self.assertEquals(client_provider_arguments[0], self.server1_address)
+        self.assertEquals(ncp_arguments[0], self.server1_address)
         self.assertEquals(binding_arguments[0], al.Command)
         self.assertIsInstance(binding_arguments[1], types.FunctionType)
         self.assertIsInstance(binding_arguments[2], types.FunctionType)
@@ -290,7 +291,7 @@ class BotAppTest(CommonTestCase):
         m.verify(self.concurrency_manager, times=2).start(self.provided_client)
         m.verify(self.concurrency_manager).join()
 
-    def test_plugin_configurer_is_set_to_plugin_manager_on_construct(self):
+    def test_plugin_configurer_is_set_to_plugin_manager(self):
         self.assertEquals(self.botapp.plugin_configurer,
                           self.plugin_manager.plugin_configurer)
 

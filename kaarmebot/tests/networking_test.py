@@ -3,7 +3,7 @@ import mockito as m
 import kaarmebot.networking as n
 
 
-class TestSimpleTCPLineClient(unittest.TestCase):
+class TestSimpleSocketGreenlet(unittest.TestCase):
     example_string = "this is an example string"
 
     def setUp(self):
@@ -15,7 +15,7 @@ class TestSimpleTCPLineClient(unittest.TestCase):
         self.set_sock_mock_receive_string(self.example_string)
 
         self.address = 'some_address'
-        self.client = n.SimpleTCPLineClient(
+        self.client = n.SimpleSocketGreenlet(
             self.address, self.message_callback, self.close_callback)
 
         self.lines = []

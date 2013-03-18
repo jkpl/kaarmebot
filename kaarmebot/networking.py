@@ -7,7 +7,7 @@ logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 
-class SimpleTCPLineClient(g.Greenlet):
+class SimpleSocketGreenlet(g.Greenlet):
     def __init__(self, address, message_handler, close_handler):
         g.Greenlet.__init__(self)
         self.address = address
