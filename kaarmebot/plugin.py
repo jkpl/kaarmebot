@@ -17,7 +17,7 @@ def plugin_config(**settings):
     return decorator
 
 
-class PluginManager:
+class PluginManager(object):
     def __init__(self, dispatcher, plugin_configurer=None):
         self.plugins = {}
         self.dispatcher = dispatcher

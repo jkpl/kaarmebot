@@ -4,7 +4,7 @@ import collections
 Message = collections.namedtuple('Message', ['source', 'target', 'contents'])
 
 
-class MessageDispatcher:
+class MessageDispatcher(object):
     def __init__(self):
         self.routing_classes = {}
 
