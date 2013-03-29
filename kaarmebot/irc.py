@@ -8,14 +8,6 @@ IrcMessage = namedtuple('IrcMsg', ['name', 'command', 'parameters',
 Person = namedtuple('Host', ['nick', 'username', 'hostname', 'full'])
 
 
-## Exceptions
-class MessageParseError(Exception):
-    def __init__(self, message, value, occurred_in):
-        self.message = message
-        self.value = value
-        self.occurred_in = occurred_in
-
-
 ## Commands
 def any_command(*args, **kwargs):
     if len(args) == 1 and not kwargs:
@@ -72,19 +64,16 @@ def quit(message=None):
 
 
 def raw_command(command, parameters=None, body=None):
-    try:
-        cmd = [command.upper().decode('utf-8')]
-        if parameters:
-            if type(parameters) in (list, tuple):
-                p = [to_unicode(x) for x in parameters if x]
-                cmd.append(' '.join(p))
-            else:
-                cmd.append(parameters.decode('utf-8'))
-        if body:
-            cmd.append(':' + body.decode('utf-8'))
-        return ' '.join(cmd)
-    except (TypeError, ValueError) as e:
-        raise ParseError('Failed to parse command', message, e)
+    cmd = [to_unicode(command.upper())]
+    if parameters:
+        if type(parameters) in (list, tuple):
+            p = [to_unicode(x) for x in parameters if x]
+            cmd.append(' '.join(p))
+        else:
+            cmd.append(to_unicode(parameters))
+    if body:
+        cmd.append(':' + to_unicode(body))
+    return ' '.join(cmd)
 
 
 def topic(channel, new_topic=None):
@@ -97,20 +86,17 @@ def user(username, usermode, real_name):
 
 ## Message parsing
 def parse_message(message):
-    try:
-        decoded = message.translate(None, '\r\n').decode('utf-8')
-        first, rest = pick_first_part(decoded)
-        if first[0] == ':':
-            name = first[1:]
-            command, rest = pick_first_part(rest)
-            parameters, body = pick_first_part(rest, ':')
-            parameters = [x for x in parameters.split(' ') if x]
-            return IrcMessage(name, command, parameters, body, decoded)
-        else:
-            _, rest = pick_first_part(rest, ':')
-            return IrcMessage(None, first, None, rest, decoded)
-    except (TypeError, ValueError) as e:
-        raise ParseError('Failed to parse message', message, e)
+    decoded = to_unicode(message).translate('\r\n')
+    first, rest = pick_first_part(decoded)
+    if first[0] == ':':
+        name = first[1:]
+        command, rest = pick_first_part(rest)
+        parameters, body = pick_first_part(rest, ':')
+        parameters = [x for x in parameters.split(' ') if x]
+        return IrcMessage(name, command, parameters, body, decoded)
+    else:
+        _, rest = pick_first_part(rest, ':')
+        return IrcMessage(None, first, None, rest, decoded)
 
 
 def pick_first_part(message, delimeter=' '):
@@ -148,7 +134,8 @@ def get_or_none(collection, key):
 
 
 def to_unicode(obj):
-    return obj.decode('utf-8') if isinstance(obj, basestring) else unicode(obj)
+    return (obj.decode('utf-8', 'replace')
+            if isinstance(obj, basestring) else unicode(obj))
 
 
 def string_to_person(person_str):
