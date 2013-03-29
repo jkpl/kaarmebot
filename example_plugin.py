@@ -11,11 +11,12 @@ def echo_to_source(request):
     message = request.message
     d = re.match('(?P<nick>.*): (?P<msg>.*)', message.body).groupdict()
     msg = d.get('msg')
-    own_nick = d.get('nick')
+    nick = d.get('nick')
+    my_nick = request.source_settings.get('nick')
     target = message.parameters[0]
     source = irc.string_to_person(message.name).nick
-    if msg:
-        if target != own_nick:
+    if msg and nick == my_nick:
+        if target != nick:
             return irc.privmsg(target, "%s: %s" % (source, msg))
         else:
             return irc.privmsg(source, "%s: %s" % (source, msg))
