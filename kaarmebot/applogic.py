@@ -139,7 +139,8 @@ class Client(object):
             (Command, message_matcher, command_handler),
         )
 
-        self.client = network_client_provider(address, message_handler, close_handler)
+        self.client = network_client_provider(
+            address, message_handler, close_handler)
         add_bindings_to_dispatcher(self.bindings, self.dispatcher)
         self.dispatcher.dispatch(
             ClientStatusMessage(self.name, None, 'started'))
@@ -186,8 +187,9 @@ class PluginHandler(object):
         contents = getattr(message, 'contents', message)
         source = getattr(message, 'source', '')
         result = self._execute(contents, source)
-        self.dispatcher.dispatch(
-            Command(None, message.source, result))
+        if result:
+            self.dispatcher.dispatch(
+                Command(None, message.source, result))
 
     def _execute(self, contents, source):
         request = PluginRequest(
