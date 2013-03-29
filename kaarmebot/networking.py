@@ -25,13 +25,21 @@ class SimpleSocketGreenlet(g.Greenlet):
     def send(self, message):
         self.sock.sendall(message + '\r\n')
 
+    def handle_message(self, message):
+        try:
+            self.message_handler(message)
+        except Exception:
+            logger.exception(('Error occurred while attempting '
+                              'to handle message.'))
+
     def _run(self):
         self.sock.connect(self.address)
         stream = self.sock.makefile()
         self.running = True
         try:
             while self.running:
-                self.message_handler(stream.readline())
+                line = stream.readline()
+                self.handle_message(line)
         except Exception:
             logger.exception('Error occurred while reading from socket.')
         finally:
